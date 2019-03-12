@@ -231,6 +231,8 @@
         "name": "Name:",
         "save": "Save",
         "isMusicFile": "This is a musical track",
+        "toTrim": "Trim the start/end of the track",
+        "trimThreshold": "Trim threshold:",
         "poolSize": "Pool size:"
     },
     "styles": {

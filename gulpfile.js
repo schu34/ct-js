@@ -21,7 +21,7 @@ const path = require('path'),
 
 const argv = minimist(process.argv.slice(2));
 
-const nwVersion = '0.34.1',
+const nwVersion = '0.36.4',
       nwFiles = ['./app/**', '!./app/export/**', '!./app/exportDesktop/**', '!./app/cache/**', '!./app/.vscode/**', '!./app/JamGames/**'];
 
 var channelPostfix = argv.channel || false;
