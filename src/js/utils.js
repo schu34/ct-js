@@ -28,7 +28,6 @@
     };
     */
 
-    window.writeFileSync = fs.writeFileSync;
     window.megacopy = fs.copy;
 
     /* eslint {"no-bitwise": "off"} */
