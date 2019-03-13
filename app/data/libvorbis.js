@@ -1,12 +1,3 @@
-var window;
-
-if (window && !window.BlobEvent) {
-    window.BlobEvent = function BlobEvent(type, init) {
-        this.type = type;
-        this.data = init.data;
-    };
-}
-// END BlobEvent shim
 var VorbisWorkerScript = (function () {
     function VorbisWorkerScript() {
     }
@@ -330,9 +321,10 @@ var ENVIRONMENT_IS_WEB = typeof window === 'object';
 // 2) We could be the application main() thread proxied to worker. (with Emscripten -s PROXY_TO_WORKER=1) (ENVIRONMENT_IS_WORKER == true, ENVIRONMENT_IS_PTHREAD == false)
 // 3) We could be an application pthread running in a worker. (ENVIRONMENT_IS_WORKER == true and ENVIRONMENT_IS_PTHREAD == true)
 var ENVIRONMENT_IS_WORKER = typeof importScripts === 'function';
-var ENVIRONMENT_IS_NODE = typeof process === 'object' && typeof require === 'function' && !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_WORKER;
+var ENVIRONMENT_IS_NODE = false;
 var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
 
+/*
 if (ENVIRONMENT_IS_NODE) {
   // Expose functionality in the same simple way that the shells work
   // Note that we pollute the global namespace here, otherwise we break in node
@@ -394,7 +386,7 @@ if (ENVIRONMENT_IS_NODE) {
 
   Module['inspect'] = function () { return '[Emscripten Module object]'; };
 }
-else if (ENVIRONMENT_IS_SHELL) {
+else */ if (ENVIRONMENT_IS_SHELL) {
   if (!Module['print']) Module['print'] = print;
   if (typeof printErr != 'undefined') Module['printErr'] = printErr; // not present in v8 or older sm
 
@@ -34958,13 +34950,9 @@ run();
     return Module;
 }
 
-// node.js Environment
-var module;
-if (module && module.exports) {
-    makeVorbisEncoderModule({}, module);
-}
-
 // Web Worker Environment
-if (!module && this.document === undefined) {
+if (this.document === undefined) {
     VorbisWorkerScript.main(this);
+} else {
+  window.VorbisEncoder = VorbisEncoder;
 }
