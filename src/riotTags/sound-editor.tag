@@ -64,22 +64,35 @@ sound-editor.panel.view
 
         this.audioBufferToOggBlob = (audioBuffer) => {
             return new Promise((resolve, reject) => {
-                var encoder = new VorbisEncoder();
+                var myWorker = new Worker('data/libvorbis.js');
                 var chunks = [];
                 var samples = audioBuffer.length;
                 var channels = audioBuffer.numberOfChannels;
                 var sampleRate = audioBuffer.sampleRate;
                 var chunkSize = 10 * 4096;
-                var ctx = new AudioContext();
-
-                encoder.ondata = (data) => {
-                    chunks.push(data);
-                };
                 
-                encoder.onfinish = () => {                    
-                    var blob = new Blob(chunks, { type: 'audio/ogg' });
-                    resolve(blob);
-                };
+                
+                myWorker.onmessage = function(e) {
+                    var data = e.data;
+                    switch(data.type) {
+                        case 'data':
+                            chunks.push(data.buffer);
+                            break;
+                        case 'finish':
+                            var blob = new Blob(chunks, { type: 'audio/ogg' });
+                            resolve(blob);
+                            break;
+                    }
+                }
+
+            
+                // init the encoding
+                myWorker.postMessage({
+                    type: 'start',
+                    sampleRate: sampleRate,
+                    channels: channels,
+                    quality: 0.5
+                });
                 
                 function encode(audioBuffer) {
                     var buffers = [];
@@ -90,22 +103,29 @@ sound-editor.panel.view
                         const array = audioBuffer.getChannelData(ch).slice();
                         buffers.push(array.buffer);
                     }
-                    encoder.encode(buffers, samples, channels);
+                    myWorker.postMessage({
+                        type: 'data',
+                        samples: samples,
+                        channels: channels,
+                        buffers: buffers
+                    }, buffers);
                 }
-
-                encoder.init(channels, sampleRate, 0.5);
-         
+                
+                
+                var ctx = new AudioContext();
+                
                 for (var n = 0; n < samples; n += chunkSize) {
-                    var actualSize = Math.min(chunkSize, samples - n - 1);                   
+                    var actualSize = Math.min(chunkSize, samples - n - 1);
                     var chunkBuffer = ctx.createBuffer(channels, actualSize, ctx.sampleRate);
                     for (var ch = 0; ch < channels; ch += 1) {
                         var src  = audioBuffer.getChannelData(ch).subarray(n, n + actualSize);
                         var dest = chunkBuffer.getChannelData(ch);
                         dest.set(src);
-                    }
+                    }	
                     encode(chunkBuffer);
                 }
-                encoder.finish();
+                
+                myWorker.postMessage({ type: 'finish' });
             });
         };
 
@@ -240,6 +260,7 @@ sound-editor.panel.view
         };
 
         this.applySoundTransformation = ()=>{
+
             this.audioBufferToOggBlob(this.toTrim ? this.trimAudioBuffer(this.audioBuffer) : this.audioBuffer).then(
                 (blob)=>{
                     this.audioBlob = blob;
