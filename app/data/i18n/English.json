@@ -230,8 +230,10 @@
         "import": "Import",
         "name": "Name:",
         "save": "Save",
+        "loadingAudio": "Audio is loading...",
         "isMusicFile": "This is a musical track",
         "toTrim": "Trim the start/end of the track",
+        "encodingQuality": "Encoding quality:",
         "trimThreshold": "Trim threshold:",
         "poolSize": "Pool size:"
     },
