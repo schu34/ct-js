@@ -197,6 +197,13 @@ sound-editor.panel.view
             };
             fileReader.readAsArrayBuffer(this.audioBlob);
 
+            // if we detect a same file but with a different extension, we remove it since the sound is migrated
+            fs.readdir(sessionStorage.projdir + '/snd/', (err, files) => {
+                files.filter(file => file.indexOf('s' + this.sound.uid) !== -1 && file.indexOf('.ogg') === -1).forEach(f => {
+                    fs.unlink(sessionStorage.projdir + '/snd/' + f, (err) =>{ if(err) throw err});
+                });
+            });
+
             this.parent.update();
         };
 
