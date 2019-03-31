@@ -32,7 +32,8 @@ sound-editor.panel.view
         p(if="{toTrim}")
             label
                 b {voc.trimThreshold}
-                input(type="number" min="0", max="9999" value="{trimThreshold}" onchange="{changeTrimThreshold}")
+                i.icon-info.aLittleHint(title="{voc.trimThresholdHint}")
+                input(type="number" min="0" max="999" value="{trimThreshold}" onchange="{changeTrimThreshold}")
         label.file
             .button.wide.nml
                 i.icon.icon-plus

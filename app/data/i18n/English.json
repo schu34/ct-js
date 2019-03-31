@@ -235,6 +235,7 @@
         "toTrim": "Trim the start/end of the track",
         "encodingQuality": "Encoding quality:",
         "trimThreshold": "Trim threshold:",
+        "trimThresholdHint": "A value between 0 and 999. Higher values result in a less sensitive cropping.",
         "poolSize": "Pool size:"
     },
     "styles": {
