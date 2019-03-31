@@ -111,3 +111,28 @@ div#loading
     width 100%
     height 100%
     line-height 1.5 !important
+
+/* Media tag styling */
+
+audio::-webkit-media
+    &-controls-current-time-display, &-controls-time-remaining-display
+        font-family fonts
+    if (theme == 'Night')
+        &-controls
+            background invert(bl)
+            border 1px solid invert(bd)
+            filter invert(1)
+            border-radius br
+        &-controls-panel
+            background transparent
+            background invert(bl)
+    if (theme == 'Day')
+        &-controls
+            background white
+            border 1px solid bl
+            border-radius br
+        &-controls-panel
+            background transparent
+            background white
+video::-internal-media-controls-overflow-button, audio::-internal-media-controls-overflow-button
+    display none !important
