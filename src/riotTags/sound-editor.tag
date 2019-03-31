@@ -4,16 +4,15 @@ sound-editor.panel.view
         br
         input.wide(type="text" value="{sound.name}" onchange="{wire('this.sound.name')}")
         .anErrorNotice(if="{nameTaken}") {vocGlob.nametaken}
-        br
-        p 
-            label
-                b {voc.poolSize}   
-                input(type="number" min="1" max="32" value="{sound.poolSize || 5}" onchange="{wire('this.sound.poolSize')}")
         audio(
             if="{!loadingAudio && audioBlob}"
             src="{getAudioSrc()}"
             ref="audio" controls loop 
         )
+        p
+            label
+                b {voc.poolSize}   
+                input(type="number" min="1" max="32" value="{sound.poolSize || 5}" onchange="{wire('this.sound.poolSize')}")
         p(if="{loadingAudio}")
             label
                 span {voc.loadingAudio}
