@@ -61,7 +61,8 @@ sound-editor.panel.view
             // at init, if the sound already exist, we read the file into a binary array to allow memory changes (such as trim)
             if (this.sound.lastmod) {
                 this.loadingAudio = true;
-                this.getAudioBuffer('file://' + sessionStorage.projdir + '/snd/' + this.sound.origname + '?' + this.sound.lastmod).then((buffer) => {
+                let way = path.join('file://' + sessionStorage.projdir, 'snd/', this.sound.origname + '?' + this.sound.lastmod);
+                this.getAudioBuffer(way).then((buffer) => {
                     this.audioBuffer = buffer;
                     this.applySoundTransformation();
                 });
@@ -153,7 +154,7 @@ sound-editor.panel.view
         this.trimAudioBuffer = (audioBuffer) => {
             let threshold = this.trimThreshold / 1000;
             let firsts = [];
-            let lasts = [];           
+            let lasts = [];
             // we detect the empty sound at the begining of the file 
             for (let c = 0; c < audioBuffer.numberOfChannels; c++) {
                 let data = audioBuffer.getChannelData(c);
@@ -211,7 +212,7 @@ sound-editor.panel.view
             this.loadingAudio = true;
             this.update();
             // we load a file, get the binary data
-            this.getAudioBuffer(this.refs.inputsound.value).then((buffer) => {
+            this.getAudioBuffer('file://' + this.refs.inputsound.value).then((buffer) => {
                 this.audioBuffer = buffer;
                 this.applySoundTransformation();
                 if (!this.sound.lastmod && this.sound.name === 'Sound_' + this.sound.uid.split('-').pop()) {
@@ -234,6 +235,10 @@ sound-editor.panel.view
         };
 
         this.getAudioBuffer = (audioUrl) => {
+            // Assume file protocol by default
+            if (audioUrl.indexOf('://') === -1) {
+                audioUrl = 'file://' + audioUrl;
+            }
             return new Promise((resolve, reject) => {
                 var context = new AudioContext();
                 var request = new XMLHttpRequest();
