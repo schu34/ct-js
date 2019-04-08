@@ -24,6 +24,8 @@ sounds-panel.panel.view
                 img(src="/data/img/{sound.isMusic? 'music' : 'wave'}.png")
     sound-editor(if="{editing}" sound="{editedSound}")
     script.
+        const fs = require('fs');
+
         this.namespace = 'sounds';
         this.mixin(window.riotVoc);
         this.sort = 'name';
@@ -144,6 +146,11 @@ sounds-panel.panel.view
                 .confirm(window.languageJSON.common.confirmDelete.replace('{0}', this.editedSound.name))
                 .then(e => {
                     if (e.buttonClicked === 'ok') {
+                        // remove files
+                        fs.unlink(sessionStorage.projdir + '/snd/' + this.editedSound.origname + '.wav', (err) =>{ if(err) throw err});
+                        fs.unlink(sessionStorage.projdir + '/snd/' + this.editedSound.origname + '.ogg', (err) =>{ if(err) throw err});
+                        fs.unlink(sessionStorage.projdir + '/snd/' + this.editedSound.origname + '.mp3', (err) =>{ if(err) throw err});
+
                         var ind = window.currentProject.sounds.indexOf(this.editedSound);
                         window.currentProject.sounds.splice(ind, 1);
                         this.updateList();
