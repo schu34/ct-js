@@ -109,8 +109,49 @@
         }
     };
     
-    var adapter = project => {
-        var version = project.ctjsVersion || '0.2.0';
+    var adapter = async project => {
+        
+        // execute all the migration 
+        var version = (project.ctjsVersion || '0.2.0').replace('-next-', '.');
+        let migrationToExecute = migration_process
+            .sort((m1, m2) => {
+                    let m1Version = m1.version.replace('-next-', '.').split('.');
+                    let m2Version = m2.version.replace('-next-', '.').split('.');
+
+                    for(let i = 0; i < m1Version.length; i++) {
+                        if (m1Version[i] < m2Version[i]) {
+                            return -1;
+                        }
+                        else if (m1Version[i] > m2Version[i]) {
+                            return 1;
+                        }
+                    }
+
+                    return 0;
+            })
+            .filter((migration) => { 
+                let migrationVersion = migration.version.replace('-next-', '.').split('.');
+                let currentVersion = version.split('.');
+
+                for(let i = 0; i < migrationVersion.length; i++) {
+                    if (migrationVersion[i] < currentVersion[i]) {
+                        return false;
+                    }
+                    else if (migrationVersion[i] > currentVersion[i]) {
+                        return true;
+                    }
+                }
+
+                return true;
+            });
+       
+        for (let migration of migrationToExecute) {
+            console.log('Migration project to version ' + migration.version);
+            await migration.process(project);
+        }
+
+
+        var version = (project.ctjsVersion || '0.2.0');
         version = version.split('.').map(string => Number(string));
         if (version[0] < 1) {
             if (version[1] < 3) {
@@ -152,34 +193,42 @@
      * @param {Object} projectData Loaded JSON file, in js object form
      * @returns {void}
      */
-    var loadProject = projectData => {
+    var loadProject = async projectData => {
         window.currentProject = projectData;
-        adapter(projectData);
+        window.alertify.log(window.languageJSON.intro.loadingProject);
+        
+        try {
+            await adapter(projectData);
+            fs.ensureDir(sessionStorage.projdir);
+            fs.ensureDir(sessionStorage.projdir + '/img');
+            fs.ensureDir(sessionStorage.projdir + '/snd');
 
-        fs.ensureDir(sessionStorage.projdir);
-        fs.ensureDir(sessionStorage.projdir + '/img');
-        fs.ensureDir(sessionStorage.projdir + '/snd');
+            const lastProjects = localStorage.lastProjects? localStorage.lastProjects.split(';') : [];
+            if (lastProjects.indexOf(path.normalize(sessionStorage.projdir + '.ict')) !== -1) {
+                lastProjects.splice(lastProjects.indexOf(path.normalize(sessionStorage.projdir + '.ict')), 1);
+            }
+            lastProjects.unshift(path.normalize(sessionStorage.projdir + '.ict'));
+            if (lastProjects.length > 15) {
+                lastProjects.pop();
+            }
+            localStorage.lastProjects = lastProjects.join(';');
+            window.glob.modified = false;
+            window.signals.trigger('hideProjectSelector');
+            window.signals.trigger('projectLoaded');
 
-        const lastProjects = localStorage.lastProjects? localStorage.lastProjects.split(';') : [];
-        if (lastProjects.indexOf(path.normalize(sessionStorage.projdir + '.ict')) !== -1) {
-            lastProjects.splice(lastProjects.indexOf(path.normalize(sessionStorage.projdir + '.ict')), 1);
+            if (window.currentProject.settings.title) {
+                document.title = window.currentProject.settings.title + ' — ct.js';
+            }
+
+            setTimeout(() => {
+                window.riot.update();
+            }, 0);
         }
-        lastProjects.unshift(path.normalize(sessionStorage.projdir + '.ict'));
-        if (lastProjects.length > 15) {
-            lastProjects.pop();
-        }
-        localStorage.lastProjects = lastProjects.join(';');
-        window.glob.modified = false;
-        window.signals.trigger('hideProjectSelector');
-        window.signals.trigger('projectLoaded');
-
-        if (window.currentProject.settings.title) {
-            document.title = window.currentProject.settings.title + ' — ct.js';
+        catch (err) {
+            window.alertify.alert(window.languageJSON.intro.loadingProjectError + err);
         }
 
-        setTimeout(() => {
-            window.riot.update();
-        }, 0);
+        
     };
 
     /**
