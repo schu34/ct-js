@@ -1,4 +1,6 @@
 (function (window) {
+    window.migrationProcess = window.migrationProcess || [];
+
     /* global nw */
     const fs = require('fs-extra'),
           path = require('path');
@@ -113,45 +115,9 @@
         
         // execute all the migration 
         var version = (project.ctjsVersion || '0.2.0').replace('-next-', '.');
-        let migrationToExecute = migration_process
-            .sort((m1, m2) => {
-                    let m1Version = m1.version.replace('-next-', '.').split('.');
-                    let m2Version = m2.version.replace('-next-', '.').split('.');
-
-                    for(let i = 0; i < m1Version.length; i++) {
-                        if (m1Version[i] < m2Version[i]) {
-                            return -1;
-                        }
-                        else if (m1Version[i] > m2Version[i]) {
-                            return 1;
-                        }
-                    }
-
-                    return 0;
-            })
-            .filter((migration) => { 
-                let migrationVersion = migration.version.replace('-next-', '.').split('.');
-                let currentVersion = version.split('.');
-
-                for(let i = 0; i < migrationVersion.length; i++) {
-                    if (migrationVersion[i] < currentVersion[i]) {
-                        return false;
-                    }
-                    else if (migrationVersion[i] > currentVersion[i]) {
-                        return true;
-                    }
-                }
-
-                return true;
-            });
-       
-        for (let migration of migrationToExecute) {
-            console.log('Migration project to version ' + migration.version);
-            await migration.process(project);
-        }
 
 
-        var version = (project.ctjsVersion || '0.2.0');
+        version = (project.ctjsVersion || '0.2.0');
         version = version.split('.').map(string => Number(string));
         if (version[0] < 1) {
             if (version[1] < 3) {
@@ -159,16 +125,16 @@
             }
             const ps = project.settings || {};
             if (version[1] < 5) {
-                // Модуль ct.place теперь с конфигами
+                // ct.place now has configs
                 if ('place' in project.libs) {
                     project.libs.place.gridX = project.libs.place.gridY = 512;
                 }
             }
             if (version[1] < 5 || (version[0] > 5 && !ps.version)) {
-                // Появилась настройка версии
+                // Fields for versioning your project appeared
                 ps.version = [0, 0, 0];
                 ps.versionPostfix = '';
-                // Появились настройки экспорта
+                // Export settings for desktop builds appeared
                 ps.export = {
                     windows64: true,
                     windows32: true,
@@ -184,6 +150,46 @@
                 adapter10x(project);
             }
         }
+
+        
+        const migrationToExecute = window.migrationProcess
+            .sort((m1, m2) => {
+                    const m1Version = m1.version.replace('-next-', '.').split('.');
+                    const m2Version = m2.version.replace('-next-', '.').split('.');
+
+                    for (let i = 0; i < m1Version.length; i++) {
+                        if (m1Version[i] < m2Version[i]) {
+                            return -1;
+                        } else if (m1Version[i] > m2Version[i]) {
+                            return 1;
+                        }
+                    }
+
+                    return 0;
+            })
+            .filter((migration) => { 
+                const migrationVersion = migration.version.replace('-next-', '.').split('.');
+                const currentVersion = version.split('.');
+
+                for (let i = 0; i < migrationVersion.length; i++) {
+                    if (migrationVersion[i] < currentVersion[i]) {
+                        return false;
+                    } else if (migrationVersion[i] > currentVersion[i]) {
+                        return true;
+                    }
+                }
+
+                return true;
+            });
+       
+        for (const migration of migrationToExecute) {
+            // eslint-disable-next-line no-console
+            console.debug('Migrating project to version ' + migration.version);
+            // We do need to apply updates in a sequence
+            // eslint-disable-next-line no-await-in-loop
+            await migration.process(project);
+        }
+
         project.ctjsVersion = nw.App.manifest.version;
     };
 
@@ -223,8 +229,7 @@
             setTimeout(() => {
                 window.riot.update();
             }, 0);
-        }
-        catch (err) {
+        } catch (err) {
             window.alertify.alert(window.languageJSON.intro.loadingProjectError + err);
         }
 
