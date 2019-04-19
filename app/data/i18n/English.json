@@ -97,7 +97,7 @@
             "newer": "<b>(newer)</b>",
             "older": "(older)"
         },
-        "loadingProject": "Loading project",
+        "loadingProject": "Loading the project…",
         "loadingProjectError" : "Cannot open this project because of the following error: ",
         "homepage": "Homepage",
         "latestVersion": "Version $1 is available",
