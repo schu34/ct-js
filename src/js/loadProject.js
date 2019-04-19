@@ -1,5 +1,13 @@
 (function (window) {
     window.migrationProcess = window.migrationProcess || [];
+    window.applyMigrationCode = function (version) {
+        const process = window.migrationProcess.find(process => process.version === version);
+        if (!process) {
+            throw new Error(`Cannot find migration code for version ${version}`);
+        }
+        process.process(window.currentProject)
+        .then(() => window.alertify.success(`Applied migration code for version ${version}`, 'success', 3000));
+    };
 
     /* global nw */
     const fs = require('fs-extra'),
