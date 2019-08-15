@@ -1,26 +1,29 @@
 (function (ct) {
-    var width,
-        height,
+    var wwidth,
+        wheight,
         mode = '/*%mode%*/';
     var oldWidth, oldHeight;
     var canv = ct.pixiApp.view;
+    var pixelRatio = ct.highDensity? (window.devicePixelRatio || 1) : 1;
     var manageViewport = function (room) {
         room = room || ct.room;
-        room.x -= (width - oldWidth) / 2;
-        room.y -= (height - oldHeight) / 2;
+        room.x -= (wwidth - oldWidth) / 2;
+        room.y -= (wheight - oldHeight) / 2;
     };
     var resize = function() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        var kw = width / ct.roomWidth,
-            kh = height / ct.roomHeight,
+        wwidth = window.innerWidth;
+        wheight = window.innerHeight;
+
+        var kw = wwidth / ct.roomWidth,
+            kh = wheight / ct.roomHeight,
             minorWidth = kw > kh;
-        var k = Math.min(kw, kh);
+        var k = Math.min(kw, kh) / pixelRatio;
+        
         if (mode === 'fastScale') {
             canv.style.transform = 'scale(' + k + ')';
             canv.style.position = 'absolute';
-            canv.style.left = (width - ct.width) / 2 + 'px';
-            canv.style.top = (height - ct.height) / 2 + 'px';
+            canv.style.left = (wwidth - ct.width) / 2 + 'px';
+            canv.style.top = (wheight - ct.height) / 2 + 'px';
         } else {
             var {room} = ct;
             if (!room) {
@@ -30,30 +33,34 @@
             oldHeight = ct.height;
             if (mode === 'expandViewport' || mode === 'expand') {
                 for (const bg of ct.types.list.BACKGROUND) {
-                    bg.width = width;
-                    bg.height = height;
+                    bg.width = wwidth;
+                    bg.height = wheight;
                 }
-                ct.viewWidth = width;
-                ct.viewHeight = height;
+                ct.viewWidth = wwidth / pixelRatio;
+                ct.viewHeight = wheight / pixelRatio;
             }
             if (mode !== 'scaleFit') {
-                ct.pixiApp.renderer.resize(width, height);
+                ct.pixiApp.renderer.resize(wwidth * pixelRatio, wheight * pixelRatio);
                 if (mode === 'scaleFill') {
                     if (minorWidth) {
-                        ct.viewWidth = Math.ceil(width / k);
+                        ct.viewWidth = Math.ceil(wwidth / k);
                     } else {
-                        ct.viewHeight = Math.ceil(height / k);
+                        ct.viewHeight = Math.ceil(wheight / k);
                     }
                     for (const bg of ct.types.list.BACKGROUND) {
                         bg.width = ct.viewWidth;
                         bg.height = ct.viewHeight;
                     }
                 }
+                if (mode === 'expandViewport' || mode === 'expand') {
+                    canv.style.width = wwidth + 'px';
+                    canv.style.height = wheight + 'px';
+                }
             } else {
                 ct.pixiApp.renderer.resize(Math.floor(ct.viewWidth * k), Math.floor(ct.viewHeight * k));
                 canv.style.position = 'absolute';
-                canv.style.left = (width - ct.width) / 2 + 'px';
-                canv.style.top = (height - ct.height) / 2 + 'px';
+                canv.style.left = (wwidth - ct.width) / 2 + 'px';
+                canv.style.top = (wheight - ct.height) / 2 + 'px';
             }
             if (mode === 'scaleFill' || mode === 'scaleFit') {
                 ct.pixiApp.stage.scale.x = k;
@@ -92,8 +99,8 @@
         document.addEventListener('keyup', queuedFullscreen);
         document.addEventListener('click', queuedFullscreen);
     };
-    width = window.innerWidth;
-    height = window.innerHeight;
+    wwidth = window.innerWidth;
+    wheight = window.innerHeight;
     window.addEventListener('resize', resize);
     ct.fittoscreen = resize;
     ct.fittoscreen.manageViewport = manageViewport;
